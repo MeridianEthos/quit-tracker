@@ -1,39 +1,80 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  Wind, Sunrise, Sprout, Heart, Droplets, Leaf, Flower2, Sun,
-  ArrowDownCircle, Award, Trophy, Lock, Check, Settings, X,
-} from "lucide-react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Vape-Free Tracker</title>
+<meta name="description" content="A gamified tracker for quitting nicotine: milestone badges, a body-healing timeline, and daily mood check-ins." />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0E2A2E; }
+  .qt-counter { font-family: 'Fraunces', serif; animation: breathe 9s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { transform: scale(1); opacity: .96 } 50% { transform: scale(1.035); opacity: 1 } }
+  input[type=range] { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 6px; outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #EAF2EF; border: 3px solid #6FCF97; cursor: pointer; }
+  input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #EAF2EF; border: 3px solid #6FCF97; cursor: pointer; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid #E8B04B; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .qt-counter { animation: none !important; } }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
 
 // ---- palette -------------------------------------------------------------
 const C = {
-  ink: "#0E2A2E",
-  ink2: "#123A3E",
-  card: "#15393D",
-  line: "#22535790",
-  mist: "#94B4B0",
-  paper: "#EAF2EF",
-  grow: "#6FCF97",
-  growDeep: "#39A877",
-  dawn: "#E8B04B",
-  locked: "#1B3D41",
+  ink: "#0E2A2E", ink2: "#123A3E", card: "#15393D", line: "#22535790",
+  mist: "#94B4B0", paper: "#EAF2EF", grow: "#6FCF97", growDeep: "#39A877",
+  dawn: "#E8B04B", locked: "#1B3D41",
 };
 
+// ---- inline SVG icons (no dependencies) ----------------------------------
+const ICONS = {
+  Wind: '<path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/>',
+  Sunrise: '<path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/>',
+  Sprout: '<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>',
+  Heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  Droplets: '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>',
+  Leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/>',
+  Flower2: '<circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="6.7" r="2.5"/><circle cx="12" cy="17.3" r="2.5"/><circle cx="6.9" cy="9.3" r="2.5"/><circle cx="17.1" cy="9.3" r="2.5"/><circle cx="6.9" cy="14.7" r="2.5"/><circle cx="17.1" cy="14.7" r="2.5"/>',
+  Sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  ArrowDownCircle: '<circle cx="12" cy="12" r="10"/><path d="m8 12 4 4 4-4"/><path d="M12 8v8"/>',
+  Award: '<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+  Trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  Lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  Check: '<path d="M20 6 9 17l-5-5"/>',
+  Settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  X: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+};
+
+function SvgIcon({ name, size = 24 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      dangerouslySetInnerHTML={{ __html: ICONS[name] || "" }} />
+  );
+}
+
 // ---- milestones (badge + what's healing) ---------------------------------
-// hours = time from quit moment; aligned to Ethan's plan (quit Jun 20,
-// step-downs at 42d / 56d, patch-free at 70d).
 const MILESTONES = [
-  { h: 1,        title: "First hour",      Icon: Wind,            body: "Your heart rate and blood pressure are already easing back toward normal." },
-  { h: 12,       title: "Half a day",      Icon: Sunrise,         body: "Blood oxygen and circulation steady as the nicotine level in you keeps falling." },
-  { h: 24,       title: "One full day",    Icon: Sprout,          body: "A whole day. Withdrawal tends to peak around now, then starts turning the corner." },
-  { h: 48,       title: "Over the hump",   Icon: Heart,           body: "The 48-hour wall. Most people call this the hardest point, and you're through it." },
-  { h: 72,       title: "Nicotine cleared",Icon: Droplets,        body: "Nicotine is essentially out of your body now. Taste and smell begin to sharpen." },
-  { h: 168,      title: "One week",        Icon: Leaf,            body: "A full week. Cravings are getting shorter and spacing further apart. Sleep settles." },
-  { h: 336,      title: "Two weeks",       Icon: Flower2,         body: "Circulation is improving and the worst of the physical withdrawal is behind you." },
-  { h: 720,      title: "One month",       Icon: Sun,             body: "Your brain's nicotine receptors are starting to return toward normal numbers." },
-  { h: 1008,     title: "Halfway down",    Icon: ArrowDownCircle, body: "Six weeks. Patch steps down to 14mg today, your body needs less to stay level." },
-  { h: 1344,     title: "Final step",      Icon: ArrowDownCircle, body: "Eight weeks. Last patch step, 7mg. The taper is nearly done." },
-  { h: 1680,     title: "Unhooked",        Icon: Award,           body: "Ten weeks. Patch-free from here. You handled the chemistry and the all-day habit." },
-  { h: 2160,     title: "Rewired",         Icon: Trophy,          body: "Three months. Receptors and dopamine signaling are close to baseline. Cravings are occasional, not constant." },
+  { h: 1,    title: "First hour",       icon: "Wind",            body: "Your heart rate and blood pressure are already easing back toward normal." },
+  { h: 12,   title: "Half a day",       icon: "Sunrise",         body: "Blood oxygen and circulation steady as the nicotine level in you keeps falling." },
+  { h: 24,   title: "One full day",     icon: "Sprout",          body: "A whole day. Withdrawal tends to peak around now, then starts turning the corner." },
+  { h: 48,   title: "Over the hump",    icon: "Heart",           body: "The 48-hour wall. Most people call this the hardest point, and you're through it." },
+  { h: 72,   title: "Nicotine cleared", icon: "Droplets",        body: "Nicotine is essentially out of your body now. Taste and smell begin to sharpen." },
+  { h: 168,  title: "One week",         icon: "Leaf",            body: "A full week. Cravings are getting shorter and spacing further apart. Sleep settles." },
+  { h: 336,  title: "Two weeks",        icon: "Flower2",         body: "Circulation is improving and the worst of the physical withdrawal is behind you." },
+  { h: 720,  title: "One month",        icon: "Sun",             body: "Your brain's nicotine receptors are starting to return toward normal numbers." },
+  { h: 1008, title: "Halfway down",     icon: "ArrowDownCircle", body: "Six weeks. Patch steps down to 14mg today, your body needs less to stay level." },
+  { h: 1344, title: "Final step",       icon: "ArrowDownCircle", body: "Eight weeks. Last patch step, 7mg. The taper is nearly done." },
+  { h: 1680, title: "Unhooked",         icon: "Award",           body: "Ten weeks. Patch-free from here. You handled the chemistry and the all-day habit." },
+  { h: 2160, title: "Rewired",          icon: "Trophy",          body: "Three months. Receptors and dopamine signaling are close to baseline. Cravings are occasional, not constant." },
 ];
 
 const ENCOURAGEMENTS = [
@@ -56,26 +97,22 @@ const PREP_NOTES = [
   "Toss or hand off your device the night before so it isn't within reach on day one.",
 ];
 
-// ---- storage helpers ------------------------------------------------------
-async function loadKey(key, fallback) {
+// ---- storage helpers (browser localStorage) ------------------------------
+function loadKey(key, fallback) {
   try {
-    const r = await window.storage.get(key, false);
-    return r ? JSON.parse(r.value) : fallback;
-  } catch {
-    return fallback;
-  }
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : fallback;
+  } catch { return fallback; }
 }
-async function saveKey(key, value) {
-  try {
-    await window.storage.set(key, JSON.stringify(value), false);
-  } catch (e) {
-    console.error("save failed", e);
-  }
+function saveKey(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); }
+  catch (e) { console.error("save failed", e); }
 }
 
 const DEFAULT_QUIT = "2026-06-20";
 const MOOD_LABELS = ["Rough", "Low", "Okay", "Good", "Great"];
 const CRAVE_LABELS = ["None", "Mild", "Noticeable", "Strong", "Hard", "Intense"];
+const MOOD_EMOJI = ["\uD83D\uDE23", "\uD83D\uDE41", "\uD83D\uDE10", "\uD83D\uDE42", "\uD83D\uDE04"];
 
 function fmtDur(ms) {
   if (ms < 0) ms = 0;
@@ -86,11 +123,10 @@ function fmtDur(ms) {
   return { d, h, m };
 }
 
-export default function QuitTracker() {
+function QuitTracker() {
   const [now, setNow] = useState(Date.now());
   const [quitISO, setQuitISO] = useState(DEFAULT_QUIT);
   const [moods, setMoods] = useState([]);
-  const [loaded, setLoaded] = useState(false);
 
   const [mood, setMood] = useState(2);
   const [crave, setCrave] = useState(2);
@@ -101,14 +137,11 @@ export default function QuitTracker() {
   const toastTimer = useRef(null);
 
   useEffect(() => {
-    (async () => {
-      const cfg = await loadKey("quit:config", { quitISO: DEFAULT_QUIT });
-      const m = await loadKey("quit:moods", []);
-      setQuitISO(cfg.quitISO || DEFAULT_QUIT);
-      setDateDraft(cfg.quitISO || DEFAULT_QUIT);
-      setMoods(Array.isArray(m) ? m : []);
-      setLoaded(true);
-    })();
+    const cfg = loadKey("quit:config", { quitISO: DEFAULT_QUIT });
+    const m = loadKey("quit:moods", []);
+    setQuitISO(cfg.quitISO || DEFAULT_QUIT);
+    setDateDraft(cfg.quitISO || DEFAULT_QUIT);
+    setMoods(Array.isArray(m) ? m : []);
   }, []);
 
   useEffect(() => {
@@ -121,7 +154,7 @@ export default function QuitTracker() {
   const preQuit = elapsedMs < 0;
   const elapsedH = elapsedMs / 3.6e6;
   const { d, h, m } = fmtDur(elapsedMs);
-  const cd = fmtDur(quitMs - now); // countdown
+  const cd = fmtDur(quitMs - now);
 
   const earnedCount = MILESTONES.filter((x) => elapsedH >= x.h).length;
   const next = MILESTONES.find((x) => elapsedH < x.h);
@@ -141,19 +174,19 @@ export default function QuitTracker() {
     toastTimer.current = setTimeout(() => setToast(""), 2200);
   }
 
-  async function saveMood() {
+  function saveMood() {
     const entry = { ts: Date.now(), mood, crave, note: note.trim() };
     const upd = [...moods, entry];
     setMoods(upd);
     setNote("");
-    await saveKey("quit:moods", upd);
+    saveKey("quit:moods", upd);
     flash("Check-in saved");
   }
 
-  async function saveDate() {
+  function saveDate() {
     setQuitISO(dateDraft);
     setShowSettings(false);
-    await saveKey("quit:config", { quitISO: dateDraft });
+    saveKey("quit:config", { quitISO: dateDraft });
     flash("Quit date updated");
   }
 
@@ -162,66 +195,50 @@ export default function QuitTracker() {
   function nextLabel() {
     if (!next) return "Every milestone earned";
     const remH = next.h - elapsedH;
-    if (remH >= 24) return `${next.title} in ${Math.ceil(remH / 24)} day${Math.ceil(remH / 24) > 1 ? "s" : ""}`;
-    if (remH >= 1) return `${next.title} in ${Math.ceil(remH)}h`;
-    return `${next.title} in ${Math.ceil(remH * 60)}m`;
+    if (remH >= 24) { const dd = Math.ceil(remH / 24); return next.title + " in " + dd + " day" + (dd > 1 ? "s" : ""); }
+    if (remH >= 1) return next.title + " in " + Math.ceil(remH) + "h";
+    return next.title + " in " + Math.ceil(remH * 60) + "m";
   }
 
   return (
     <div style={{
       minHeight: "100vh",
-      background: `linear-gradient(180deg, ${C.ink} 0%, #0C2226 55%, #14302B 100%)`,
-      color: C.paper,
-      fontFamily: "'Inter', system-ui, sans-serif",
-      padding: "0 0 56px",
+      background: "linear-gradient(180deg, " + C.ink + " 0%, #0C2226 55%, #14302B 100%)",
+      color: C.paper, fontFamily: "'Inter', system-ui, sans-serif", padding: "0 0 56px",
     }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
-        * { box-sizing: border-box; }
-        .qt-counter { font-family:'Fraunces',serif; animation: breathe 9s ease-in-out infinite; }
-        @keyframes breathe { 0%,100%{ transform:scale(1); opacity:.96 } 50%{ transform:scale(1.035); opacity:1 } }
-        input[type=range]{ -webkit-appearance:none; appearance:none; height:6px; border-radius:6px; outline:none; }
-        input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:24px; height:24px; border-radius:50%; background:${C.paper}; border:3px solid ${C.grow}; cursor:pointer; }
-        input[type=range]::-moz-range-thumb{ width:24px; height:24px; border-radius:50%; background:${C.paper}; border:3px solid ${C.grow}; cursor:pointer; }
-        button:focus-visible, input:focus-visible, textarea:focus-visible{ outline:2px solid ${C.dawn}; outline-offset:2px; }
-        @media (prefers-reduced-motion: reduce){ .qt-counter{ animation:none !important; } }
-      `}</style>
-
       {/* header */}
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "20px 20px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: C.mist }}>Vape-free</span>
         <button onClick={() => setShowSettings(true)} aria-label="Settings"
           style={{ background: "none", border: "none", color: C.mist, cursor: "pointer", padding: 6 }}>
-          <Settings size={18} />
+          <SvgIcon name="Settings" size={18} />
         </button>
       </div>
 
       {/* hero */}
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "8px 20px 26px", textAlign: "center" }}>
         {preQuit ? (
-          <>
+          <React.Fragment>
             <div className="qt-counter" style={{ fontSize: 72, lineHeight: 1, color: C.dawn, fontWeight: 500 }}>
               {cd.d}<span style={{ fontSize: 26, color: C.mist }}>d</span> {cd.h}<span style={{ fontSize: 26, color: C.mist }}>h</span>
             </div>
             <div style={{ marginTop: 10, color: C.mist, fontSize: 15 }}>
               until quit day, {new Date(quitMs).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
             </div>
-          </>
+          </React.Fragment>
         ) : (
-          <>
-            <div className="qt-counter" style={{ fontSize: 88, lineHeight: .95, color: C.grow, fontWeight: 500 }}>
-              {d}
-            </div>
+          <React.Fragment>
+            <div className="qt-counter" style={{ fontSize: 88, lineHeight: .95, color: C.grow, fontWeight: 500 }}>{d}</div>
             <div style={{ color: C.mist, fontSize: 15, marginTop: 2 }}>
               {d === 1 ? "day" : "days"} free &middot; {h}h {m}m
             </div>
-          </>
+          </React.Fragment>
         )}
       </div>
 
       {/* encouragement */}
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "0 20px" }}>
-        <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", display: "flex", gap: 12 }}>
+        <div style={{ background: C.card, border: "1px solid " + C.line, borderRadius: 16, padding: "16px 18px", display: "flex", gap: 12 }}>
           <div style={{ width: 4, borderRadius: 4, background: C.dawn, flexShrink: 0 }} />
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, fontStyle: "italic", color: C.paper }}>{encour}</p>
         </div>
@@ -235,43 +252,38 @@ export default function QuitTracker() {
             <span>{nextLabel()}</span>
           </div>
           <div style={{ height: 8, background: C.locked, borderRadius: 8, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${C.growDeep}, ${C.grow})`, borderRadius: 8, transition: "width .6s ease" }} />
+            <div style={{ height: "100%", width: pct + "%", background: "linear-gradient(90deg, " + C.growDeep + ", " + C.grow + ")", borderRadius: 8, transition: "width .6s ease" }} />
           </div>
         </div>
       )}
 
       {/* milestone / healing cards */}
       <div style={{ maxWidth: 480, margin: "26px auto 0", padding: "0 20px" }}>
-        <h2 style={{ fontFamily: "'Fraunces',serif", fontWeight: 500, fontSize: 20, margin: "0 0 14px" }}>
-          Milestones &amp; what heals
-        </h2>
+        <h2 style={{ fontFamily: "'Fraunces',serif", fontWeight: 500, fontSize: 20, margin: "0 0 14px" }}>Milestones &amp; what heals</h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {MILESTONES.map((ms, i) => {
             const earned = !preQuit && elapsedH >= ms.h;
-            const Icon = earned ? ms.Icon : Lock;
+            const iconName = earned ? ms.icon : "Lock";
             return (
               <div key={i} style={{
                 display: "flex", gap: 14, padding: 14, borderRadius: 14,
                 background: earned ? "#173F38" : C.locked,
-                border: `1px solid ${earned ? C.growDeep : C.line}`,
+                border: "1px solid " + (earned ? C.growDeep : C.line),
                 opacity: earned ? 1 : 0.62,
               }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: 12, flexShrink: 0,
                   display: "grid", placeItems: "center",
-                  background: earned ? C.grow : "#0E2A2E",
-                  color: earned ? C.ink : C.mist,
+                  background: earned ? C.grow : "#0E2A2E", color: earned ? C.ink : C.mist,
                 }}>
-                  <Icon size={22} />
+                  <SvgIcon name={iconName} size={22} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontWeight: 600, fontSize: 15 }}>{ms.title}</span>
-                    {earned && <Check size={15} color={C.grow} />}
+                    {earned && <span style={{ color: C.grow, display: "inline-flex" }}><SvgIcon name="Check" size={15} /></span>}
                   </div>
-                  <p style={{ margin: "3px 0 0", fontSize: 13.5, lineHeight: 1.45, color: earned ? "#CFE7DD" : C.mist }}>
-                    {ms.body}
-                  </p>
+                  <p style={{ margin: "3px 0 0", fontSize: 13.5, lineHeight: 1.45, color: earned ? "#CFE7DD" : C.mist }}>{ms.body}</p>
                 </div>
               </div>
             );
@@ -284,32 +296,17 @@ export default function QuitTracker() {
 
       {/* mood check-in */}
       <div style={{ maxWidth: 480, margin: "28px auto 0", padding: "0 20px" }}>
-        <h2 style={{ fontFamily: "'Fraunces',serif", fontWeight: 500, fontSize: 20, margin: "0 0 6px" }}>
-          Check in
-        </h2>
+        <h2 style={{ fontFamily: "'Fraunces',serif", fontWeight: 500, fontSize: 20, margin: "0 0 6px" }}>Check in</h2>
         <p style={{ margin: "0 0 16px", fontSize: 13.5, color: C.mist, lineHeight: 1.5 }}>
           Pause a second. Notice what's actually here right now, without fixing it. Then mark it.
         </p>
-        <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 16, padding: 18 }}>
+        <div style={{ background: C.card, border: "1px solid " + C.line, borderRadius: 16, padding: 18 }}>
           <SliderRow label="Mood" value={mood} setValue={setMood} max={4} legend={MOOD_LABELS[mood]} accent={C.grow} />
           <div style={{ height: 18 }} />
           <SliderRow label="Craving" value={crave} setValue={setCrave} max={5} legend={CRAVE_LABELS[crave]} accent={C.dawn} />
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Anything you noticed? (optional)"
-            rows={2}
-            style={{
-              width: "100%", marginTop: 16, resize: "none", borderRadius: 10,
-              background: C.ink, border: `1px solid ${C.line}`, color: C.paper,
-              padding: "10px 12px", fontSize: 14, fontFamily: "inherit",
-            }}
-          />
-          <button onClick={saveMood} style={{
-            width: "100%", marginTop: 12, padding: "13px 0", border: "none",
-            borderRadius: 11, background: C.grow, color: C.ink, fontWeight: 600,
-            fontSize: 15, cursor: "pointer", fontFamily: "inherit",
-          }}>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Anything you noticed? (optional)" rows={2}
+            style={{ width: "100%", marginTop: 16, resize: "none", borderRadius: 10, background: C.ink, border: "1px solid " + C.line, color: C.paper, padding: "10px 12px", fontSize: 14, fontFamily: "inherit" }} />
+          <button onClick={saveMood} style={{ width: "100%", marginTop: 12, padding: "13px 0", border: "none", borderRadius: 11, background: C.grow, color: C.ink, fontWeight: 600, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}>
             Save check-in
           </button>
         </div>
@@ -318,14 +315,12 @@ export default function QuitTracker() {
       {/* recent check-ins */}
       {recent.length > 0 && (
         <div style={{ maxWidth: 480, margin: "22px auto 0", padding: "0 20px" }}>
-          <h3 style={{ fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: C.mist, fontWeight: 600, margin: "0 0 12px" }}>
-            Recent
-          </h3>
+          <h3 style={{ fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: C.mist, fontWeight: 600, margin: "0 0 12px" }}>Recent</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {recent.map((r, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, background: C.card, border: `1px solid ${C.line}`, borderRadius: 12, padding: "10px 14px" }}>
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, background: C.card, border: "1px solid " + C.line, borderRadius: 12, padding: "10px 14px" }}>
                 <div style={{ width: 40, textAlign: "center" }}>
-                  <div style={{ fontSize: 20, height: 24 }}>{["😣","🙁","😐","🙂","😄"][r.mood]}</div>
+                  <div style={{ fontSize: 20, height: 24 }}>{MOOD_EMOJI[r.mood]}</div>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, color: C.paper }}>
@@ -344,31 +339,24 @@ export default function QuitTracker() {
 
       {/* toast */}
       {toast && (
-        <div style={{
-          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
-          background: C.grow, color: C.ink, padding: "10px 20px", borderRadius: 999,
-          fontWeight: 600, fontSize: 14, boxShadow: "0 8px 24px rgba(0,0,0,.4)", zIndex: 20,
-        }}>
+        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: C.grow, color: C.ink, padding: "10px 20px", borderRadius: 999, fontWeight: 600, fontSize: 14, boxShadow: "0 8px 24px rgba(0,0,0,.4)", zIndex: 20 }}>
           {toast}
         </div>
       )}
 
       {/* settings */}
       {showSettings && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(6,18,20,.7)", display: "grid", placeItems: "center", zIndex: 30, padding: 20 }}
-          onClick={() => setShowSettings(false)}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: C.ink2, border: `1px solid ${C.line}`, borderRadius: 18, padding: 22, width: "100%", maxWidth: 360 }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(6,18,20,.7)", display: "grid", placeItems: "center", zIndex: 30, padding: 20 }} onClick={() => setShowSettings(false)}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: C.ink2, border: "1px solid " + C.line, borderRadius: 18, padding: 22, width: "100%", maxWidth: 360 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <span style={{ fontFamily: "'Fraunces',serif", fontSize: 19, fontWeight: 500 }}>Quit date</span>
-              <button onClick={() => setShowSettings(false)} aria-label="Close" style={{ background: "none", border: "none", color: C.mist, cursor: "pointer" }}><X size={20} /></button>
+              <button onClick={() => setShowSettings(false)} aria-label="Close" style={{ background: "none", border: "none", color: C.mist, cursor: "pointer" }}><SvgIcon name="X" size={20} /></button>
             </div>
             <input type="date" value={dateDraft} onChange={(e) => setDateDraft(e.target.value)}
-              style={{ width: "100%", padding: "11px 12px", borderRadius: 10, background: C.ink, border: `1px solid ${C.line}`, color: C.paper, fontSize: 15, fontFamily: "inherit" }} />
-            <button onClick={saveDate} style={{ width: "100%", marginTop: 14, padding: "12px 0", border: "none", borderRadius: 11, background: C.grow, color: C.ink, fontWeight: 600, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}>
-              Save
-            </button>
+              style={{ width: "100%", padding: "11px 12px", borderRadius: 10, background: C.ink, border: "1px solid " + C.line, color: C.paper, fontSize: 15, fontFamily: "inherit" }} />
+            <button onClick={saveDate} style={{ width: "100%", marginTop: 14, padding: "12px 0", border: "none", borderRadius: 11, background: C.grow, color: C.ink, fontWeight: 600, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}>Save</button>
             <p style={{ fontSize: 12, color: C.mist, marginTop: 12, lineHeight: 1.5 }}>
-              The counter, badges, and healing notes all key off this date. Your check-ins are kept separately and saved on this device.
+              The counter, badges, and healing notes all key off this date. Your check-ins are kept separately and saved in this browser.
             </p>
           </div>
         </div>
@@ -384,12 +372,15 @@ function SliderRow({ label, value, setValue, max, legend, accent }) {
         <span style={{ fontSize: 14, fontWeight: 500, color: C.paper }}>{label}</span>
         <span style={{ fontSize: 13, color: accent, fontWeight: 600 }}>{legend}</span>
       </div>
-      <input
-        type="range" min={0} max={max} step={1} value={value}
-        onChange={(e) => setValue(Number(e.target.value))}
-        aria-label={label}
-        style={{ width: "100%", background: `linear-gradient(90deg, ${accent} ${(value / max) * 100}%, ${C.locked} ${(value / max) * 100}%)` }}
-      />
+      <input type="range" min={0} max={max} step={1} value={value}
+        onChange={(e) => setValue(Number(e.target.value))} aria-label={label}
+        style={{ width: "100%", background: "linear-gradient(90deg, " + accent + " " + (value / max) * 100 + "%, " + C.locked + " " + (value / max) * 100 + "%)" }} />
     </div>
   );
 }
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<QuitTracker />);
+</script>
+</body>
+</html>
