@@ -22,7 +22,31 @@
     padding:0 0 56px;
   }
   .wrap{ max-width:480px; margin:0 auto; padding:0 20px; }
-  .head{ display:flex; justify-content:space-between; align-items:center; padding-top:20px; }
+  .center{ min-height:100vh; display:grid; place-items:center; padding:24px; }
+  .muted{ color:var(--mist); font-size:14px; }
+
+  /* auth + boot */
+  .authcard{ width:100%; max-width:360px; text-align:center; }
+  .brand{ font-family:'Fraunces',serif; font-size:34px; font-weight:500; color:var(--grow); }
+  .authlead{ color:var(--mist); font-size:14.5px; line-height:1.55; margin:10px 0 22px; }
+  .authcard input{ width:100%; padding:13px 14px; border-radius:11px; background:var(--ink2); border:1px solid var(--line); color:var(--paper); font-size:15px; font-family:inherit; text-align:center; }
+  .authmsg{ font-size:13.5px; line-height:1.5; margin-top:14px; min-height:18px; }
+  .authmsg.ok{ color:var(--grow); }
+  .authmsg.err{ color:#E8A0A0; }
+  .spinner{ width:30px; height:30px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--grow); animation:spin 1s linear infinite; margin:0 auto; }
+  @keyframes spin{ to{ transform:rotate(360deg) } }
+
+  /* account bar */
+  .acct{ display:flex; justify-content:space-between; align-items:center; padding-top:16px; gap:12px; }
+  .acct .who{ font-size:12.5px; color:var(--mist); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .acct .right{ display:flex; align-items:center; gap:12px; flex-shrink:0; }
+  .pill{ font-size:11px; font-weight:600; padding:4px 10px; border-radius:999px; letter-spacing:.3px; }
+  .pill.synced{ background:#1C4A3A; color:var(--grow); }
+  .pill.saving{ background:#43391C; color:var(--dawn); }
+  .pill.offline{ background:#2A2A2A; color:#B9B9B9; }
+  .linkbtn{ background:none; border:none; color:var(--mist); font-size:12.5px; cursor:pointer; font-family:inherit; padding:4px; text-decoration:underline; }
+
+  .head{ display:flex; justify-content:space-between; align-items:center; padding-top:14px; }
   .eyebrow{ font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--mist); }
   .iconbtn{ background:none; border:none; color:var(--mist); cursor:pointer; padding:6px; display:inline-flex; }
   .hero{ text-align:center; padding:8px 0 26px; }
@@ -59,6 +83,7 @@
   input[type=range]::-moz-range-thumb{ width:24px; height:24px; border-radius:50%; background:var(--paper); border:3px solid var(--grow); cursor:pointer; }
   textarea{ width:100%; margin-top:16px; resize:none; border-radius:10px; background:var(--ink); border:1px solid var(--line); color:var(--paper); padding:10px 12px; font-size:14px; font-family:inherit; }
   .primary{ width:100%; margin-top:12px; padding:13px 0; border:none; border-radius:11px; background:var(--grow); color:var(--ink); font-weight:600; font-size:15px; cursor:pointer; font-family:inherit; }
+  .primary:disabled{ opacity:.55; cursor:default; }
   h3.sub{ font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:var(--mist); font-weight:600; margin:22px 0 12px; }
   .rlist{ display:flex; flex-direction:column; gap:8px; }
   .ritem{ display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; }
@@ -67,8 +92,11 @@
   .ritem .l1{ font-size:13px; }
   .ritem .l2{ font-size:12.5px; color:var(--mist); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .ritem .date{ font-size:11.5px; color:var(--mist); flex-shrink:0; }
-  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--grow); color:var(--ink); padding:10px 20px; border-radius:999px; font-weight:600; font-size:14px; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:20; opacity:0; pointer-events:none; transition:opacity .2s; }
-  .toast.show{ opacity:1; }
+  .confirm{ margin-top:14px; background:#173F38; border:1px solid var(--growDeep); border-radius:14px; padding:14px 16px; display:none; gap:12px; align-items:flex-start; }
+  .confirm.show{ display:flex; animation:fadein .3s ease; }
+  .confirm .ic{ color:var(--grow); flex-shrink:0; margin-top:1px; }
+  .confirm p{ margin:0; font-size:14px; line-height:1.55; color:#E6F3EC; }
+  @keyframes fadein{ from{ opacity:0; transform:translateY(4px) } to{ opacity:1; transform:none } }
   .overlay{ position:fixed; inset:0; background:rgba(6,18,20,.7); display:none; place-items:center; z-index:30; padding:20px; }
   .overlay.show{ display:grid; }
   .modal{ background:var(--ink2); border:1px solid var(--line); border-radius:18px; padding:22px; width:100%; max-width:360px; }
@@ -77,55 +105,86 @@
   .modal input[type=date]{ width:100%; padding:11px 12px; border-radius:10px; background:var(--ink); border:1px solid var(--line); color:var(--paper); font-size:15px; font-family:inherit; }
   .modal .note{ font-size:12px; color:var(--mist); margin-top:12px; line-height:1.5; }
   button:focus-visible, input:focus-visible, textarea:focus-visible{ outline:2px solid var(--dawn); outline-offset:2px; }
-  @media (prefers-reduced-motion: reduce){ .bignum{ animation:none !important; } }
+  @media (prefers-reduced-motion: reduce){ .bignum,.spinner{ animation:none !important; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="head">
-    <span class="eyebrow">Vape-free</span>
-    <button class="iconbtn" id="openSettings" aria-label="Settings"></button>
-  </div>
-  <div class="hero" id="hero"></div>
-  <div class="quote"><div class="bar"></div><p id="quote"></p></div>
-  <div class="prog" id="progWrap" style="display:none">
-    <div class="row"><span id="progCount"></span><span id="progNext"></span></div>
-    <div class="track"><div class="fill" id="progFill" style="width:0%"></div></div>
-  </div>
 
-  <h2 class="sec">Milestones &amp; what heals</h2>
-  <div class="cards" id="cards"></div>
-  <p class="disc">Healing notes are general estimates drawn from nicotine-cessation research. Individual recovery varies, and parts of the classic timeline come from broader tobacco studies.</p>
-
-  <h2 class="sec">Check in</h2>
-  <p class="lead">Pause a second. Notice what's actually here right now, without fixing it. Then mark it.</p>
-  <div class="panel">
-    <div class="slabel"><span class="n">Mood</span><span class="v" id="moodLegend" style="color:var(--grow)"></span></div>
-    <input type="range" id="moodRange" min="0" max="4" step="1" value="2" aria-label="Mood">
-    <div style="height:18px"></div>
-    <div class="slabel"><span class="n">Craving</span><span class="v" id="craveLegend" style="color:var(--dawn)"></span></div>
-    <input type="range" id="craveRange" min="0" max="5" step="1" value="2" aria-label="Craving">
-    <textarea id="noteInput" rows="2" placeholder="Anything you noticed? (optional)"></textarea>
-    <button class="primary" id="saveCheckin">Save check-in</button>
+<!-- boot / loading -->
+<div class="center" id="bootView">
+  <div style="text-align:center">
+    <div class="spinner"></div>
+    <p class="muted" id="bootMsg" style="margin-top:16px">Loading&hellip;</p>
   </div>
-
-  <div id="recentWrap"></div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- sign in -->
+<div class="center" id="authView" style="display:none">
+  <div class="authcard">
+    <div class="brand">Vape-Free</div>
+    <p class="authlead">Sign in with your email to sync your journey across every device. No password, we'll email you a one-tap link.</p>
+    <input type="email" id="email" placeholder="you@example.com" autocomplete="email" inputmode="email" />
+    <button class="primary" id="sendLink">Email me a sign-in link</button>
+    <p class="authmsg" id="authMsg"></p>
+  </div>
+</div>
+
+<!-- app -->
+<div id="appView" style="display:none">
+  <div class="wrap">
+    <div class="acct">
+      <span class="who" id="acctEmail"></span>
+      <span class="right"><span class="pill synced" id="syncPill">Synced</span><button class="linkbtn" id="signout">Sign out</button></span>
+    </div>
+    <div class="head">
+      <span class="eyebrow">Vape-free</span>
+      <button class="iconbtn" id="openSettings" aria-label="Settings"></button>
+    </div>
+    <div class="hero" id="hero"></div>
+    <div class="quote"><div class="bar"></div><p id="quote"></p></div>
+    <div class="prog" id="progWrap" style="display:none">
+      <div class="row"><span id="progCount"></span><span id="progNext"></span></div>
+      <div class="track"><div class="fill" id="progFill" style="width:0%"></div></div>
+    </div>
+
+    <h2 class="sec">Milestones &amp; what heals</h2>
+    <div class="cards" id="cards"></div>
+    <p class="disc">Healing notes are general estimates drawn from nicotine-cessation research. Individual recovery varies, and parts of the classic timeline come from broader tobacco studies.</p>
+
+    <h2 class="sec">Check in</h2>
+    <p class="lead">Pause a second. Notice what's actually here right now, without fixing it. Then mark it.</p>
+    <div class="panel">
+      <div class="slabel"><span class="n">Mood</span><span class="v" id="moodLegend" style="color:var(--grow)"></span></div>
+      <input type="range" id="moodRange" min="0" max="4" step="1" value="2" aria-label="Mood">
+      <div style="height:18px"></div>
+      <div class="slabel"><span class="n">Craving</span><span class="v" id="craveLegend" style="color:var(--dawn)"></span></div>
+      <input type="range" id="craveRange" min="0" max="5" step="1" value="2" aria-label="Craving">
+      <textarea id="noteInput" rows="2" placeholder="Anything you noticed? (optional)"></textarea>
+      <button class="primary" id="saveCheckin">Save check-in</button>
+      <div class="confirm" id="confirm" role="status" aria-live="polite"><div class="ic"></div><p id="confirmMsg"></p></div>
+    </div>
+
+    <div id="recentWrap"></div>
+  </div>
+</div>
 
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="mh"><span>Quit date</span><button class="iconbtn" id="closeSettings" aria-label="Close"></button></div>
     <input type="date" id="dateInput">
     <button class="primary" id="saveDate" style="margin-top:14px">Save</button>
-    <p class="note">The counter, badges, and healing notes all key off this date. Your check-ins are kept separately and saved in this browser.</p>
+    <p class="note">The counter, badges, and healing notes all key off this date. It syncs to your account along with your check-ins.</p>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function () {
   "use strict";
+
+  // ===== your Supabase project =====
+  var SUPABASE_URL = "https://trfiluspnginbbzksjfi.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_ovW6qBKYADUz3sdkzEYRiA_Y7hGGaoL";
 
   var ICONS = {
     Wind: '<path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/>',
@@ -144,7 +203,6 @@
     Settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
     X: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
   };
-
   function svg(name, size) {
     size = size || 24;
     return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || "") + "</svg>";
@@ -164,7 +222,6 @@
     { h: 1680, title: "Unhooked",         icon: "Award",           body: "Ten weeks. Patch-free from here. You handled the chemistry and the all-day habit." },
     { h: 2160, title: "Rewired",          icon: "Trophy",          body: "Three months. Receptors and dopamine signaling are close to baseline. Cravings are occasional, not constant." }
   ];
-
   var ENCOURAGEMENTS = [
     "One day at a time. The puff you don't take is the whole win.",
     "Cravings crest like a wave and pass in 3 to 5 minutes. Ride it out.",
@@ -177,187 +234,254 @@
     "The early days are the steepest. You already chose the hardest part on purpose.",
     "Future-you, three months out, is quietly grateful right now."
   ];
-
   var PREP_NOTES = [
     "Quit day is coming. Have your 21mg patches and 4mg lozenges in the house and ready.",
     "Pick your three biggest trigger moments and decide now what you'll do instead in each.",
     "On quit morning, the patch goes on the second you wake, before anything else.",
     "Toss or hand off your device the night before so it isn't within reach on day one."
   ];
-
   var MOOD_LABELS = ["Rough", "Low", "Okay", "Good", "Great"];
   var CRAVE_LABELS = ["None", "Mild", "Noticeable", "Strong", "Hard", "Intense"];
   var MOOD_EMOJI = ["\uD83D\uDE23", "\uD83D\uDE41", "\uD83D\uDE10", "\uD83D\uDE42", "\uD83D\uDE04"];
   var DEFAULT_QUIT = "2026-06-20";
 
-  function loadKey(key, fallback) {
-    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
-    catch (e) { return fallback; }
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+  function fmtDur(ms){ if(ms<0)ms=0; var s=Math.floor(ms/1000); return {d:Math.floor(s/86400),h:Math.floor((s%86400)/3600),m:Math.floor((s%3600)/60)}; }
+
+  function healingNow(elapsedH, preQuit){
+    if(preQuit) return "You haven't started yet, but logging how you feel now gives you a baseline to look back on once you quit.";
+    var h=elapsedH;
+    if(h<1)    return "In this first hour, your heart rate and blood pressure are already starting to ease.";
+    if(h<12)   return "A few hours in, your blood oxygen and circulation are steadying as nicotine clears.";
+    if(h<24)   return "Closing in on a full day, withdrawal is near its peak and about to turn the corner.";
+    if(h<48)   return "Past a day now, and the 48-hour wall is the hardest stretch. You're right in it.";
+    if(h<72)   return "Almost there: within three days nicotine is essentially out of your body, and taste and smell start to sharpen.";
+    if(h<168)  return "Nicotine has cleared your system. This week, cravings get shorter and less frequent.";
+    if(h<336)  return "Over a week in, your circulation is improving and the worst of the physical withdrawal is behind you.";
+    if(h<720)  return "A couple of weeks down, your sleep and concentration are settling as your system rebalances.";
+    if(h<2160) return "A month-plus in, your brain's nicotine receptors are returning toward normal numbers.";
+    return "Three-plus months in, your receptors and dopamine signaling are close to baseline. Cravings are occasional now, not constant.";
   }
-  function saveKey(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); }
-    catch (e) { /* private mode etc. */ }
+  function moodCraveLine(mood, crave){
+    if(crave>=4) return "That's a strong craving to sit with, and you logged it instead of acting on it. Cravings crest and pass within a few minutes, even the big ones.";
+    if(crave===3) return "A noticeable pull today. Naming it the way you just did is what takes its power away.";
+    if(mood<=1 && crave<=2) return "A low day, even without much craving. Go easy on yourself; mood tends to lift as your body settles.";
+    if(mood>=3 && crave<=1) return "Good mood and barely a craving. That's momentum doing its job.";
+    if(crave<=1) return "Cravings staying quiet today. That's your baseline coming back.";
+    return "Steady check-in. Showing up and noticing is the habit that carries the rest.";
   }
-  function esc(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-    });
-  }
-  function fmtDur(ms) {
-    if (ms < 0) ms = 0;
-    var s = Math.floor(ms / 1000);
-    return { d: Math.floor(s / 86400), h: Math.floor((s % 86400) / 3600), m: Math.floor((s % 3600) / 60) };
+  var CLOSERS=["Keep going.","One more on the board.","Onward.","Steady as you go.","That's the work."];
+  function buildEncouragement(mood, crave, elapsedH, preQuit, n){
+    return moodCraveLine(mood,crave)+" "+healingNow(elapsedH,preQuit)+" "+CLOSERS[n%CLOSERS.length];
   }
 
-  // ---- state ----
-  var cfg = loadKey("quit:config", { quitISO: DEFAULT_QUIT });
-  var quitISO = cfg && cfg.quitISO ? cfg.quitISO : DEFAULT_QUIT;
-  var moods = loadKey("quit:moods", []);
-  if (!Array.isArray(moods)) moods = [];
+  // ===== state & sync =====
+  var $ = function(id){ return document.getElementById(id); };
+  var sb = null, uid = null, currentUid = null, ticking = false;
+  var quitISO = DEFAULT_QUIT, moods = [];
+
+  function show(view){
+    $("bootView").style.display = view==="boot" ? "grid" : "none";
+    $("authView").style.display = view==="auth" ? "grid" : "none";
+    $("appView").style.display  = view==="app"  ? "block" : "none";
+  }
+  function setSync(state){
+    var p = $("syncPill");
+    p.className = "pill " + state;
+    p.textContent = state==="saving" ? "Saving\u2026" : state==="offline" ? "Offline" : "Synced";
+  }
+
+  function mergeMoods(){
+    var map = {};
+    for (var a=0; a<arguments.length; a++){
+      var arr = arguments[a]; if (!Array.isArray(arr)) continue;
+      for (var i=0; i<arr.length; i++){ var it=arr[i]; if(it && it.ts!=null) map[it.ts]=it; }
+    }
+    var out = Object.keys(map).map(function(k){ return map[k]; });
+    out.sort(function(x,y){ return x.ts - y.ts; });
+    return out;
+  }
+
+  function cacheKey(){ return "qt:" + uid + ":state"; }
+  function saveCache(){ try{ localStorage.setItem(cacheKey(), JSON.stringify({quitISO:quitISO, moods:moods})); }catch(e){} }
+  function readCache(){ try{ var v=localStorage.getItem(cacheKey()); return v?JSON.parse(v):null; }catch(e){ return null; } }
+  function readLegacy(){
+    try{
+      var c=localStorage.getItem("quit:config"), m=localStorage.getItem("quit:moods");
+      var q = c ? (JSON.parse(c).quitISO||null) : null;
+      var mm = m ? JSON.parse(m) : [];
+      return { quitISO:q, moods:Array.isArray(mm)?mm:[] };
+    }catch(e){ return {quitISO:null,moods:[]}; }
+  }
+
+  async function pull(){
+    var cloud = null;
+    try{
+      var res = await sb.from("tracker_state").select("quit_date, checkins, updated_at").eq("user_id", uid).maybeSingle();
+      if (res.error) throw res.error;
+      cloud = res.data;
+    }catch(e){
+      // offline or fetch failed: fall back to cached/local data so the user still sees their journey
+      var cache0 = readCache(), legacy0 = readLegacy();
+      quitISO = (cache0 && cache0.quitISO) || legacy0.quitISO || DEFAULT_QUIT;
+      moods = mergeMoods(cache0 && cache0.moods, legacy0.moods);
+      setSync("offline"); renderAll(); return;
+    }
+    var cache = readCache(), legacy = readLegacy();
+    var cloudCheckins = cloud && Array.isArray(cloud.checkins) ? cloud.checkins : [];
+    moods = mergeMoods(cloudCheckins, cache && cache.moods, legacy.moods);
+    quitISO = (cloud && cloud.quit_date) || (cache && cache.quitISO) || legacy.quitISO || DEFAULT_QUIT;
+    saveCache(); renderAll();
+    // if local/legacy had anything the cloud didn't, or there was no row yet, push the union up
+    var needPush = !cloud || moods.length !== cloudCheckins.length || (cloud.quit_date || DEFAULT_QUIT) !== quitISO;
+    if (needPush) push(); else setSync("synced");
+  }
+
+  async function push(){
+    if (!sb || !uid){ setSync("offline"); return; }
+    setSync("saving");
+    try{
+      var res = await sb.from("tracker_state").upsert({
+        user_id: uid, quit_date: quitISO, checkins: moods, updated_at: new Date().toISOString()
+      }, { onConflict: "user_id" });
+      if (res.error) throw res.error;
+      setSync("synced");
+    }catch(e){ setSync("offline"); }
+  }
+
+  // ===== rendering =====
+  function quitMs(){ return new Date(quitISO + "T00:00:00").getTime(); }
   var lastEarned = -1;
 
-  // ---- elements ----
-  var $ = function (id) { return document.getElementById(id); };
-  $("openSettings").innerHTML = svg("Settings", 18);
-  $("closeSettings").innerHTML = svg("X", 20);
-
-  function quitMs() { return new Date(quitISO + "T00:00:00").getTime(); }
-
-  function refreshTime() {
-    var now = Date.now();
-    var qms = quitMs();
-    var elapsed = now - qms;
-    var preQuit = elapsed < 0;
-    var elapsedH = elapsed / 3.6e6;
-
-    if (preQuit) {
-      var cd = fmtDur(qms - now);
-      var dateStr = new Date(qms).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-      $("hero").innerHTML =
-        '<div class="bignum count">' + cd.d + '<span class="u">d</span> ' + cd.h + '<span class="u">h</span></div>' +
-        '<div class="herosub">until quit day, ' + dateStr + '</div>';
-      $("progWrap").style.display = "none";
+  function refreshTime(){
+    var now=Date.now(), qms=quitMs(), elapsed=now-qms, preQuit=elapsed<0, elapsedH=elapsed/3.6e6;
+    if(preQuit){
+      var cd=fmtDur(qms-now);
+      var dateStr=new Date(qms).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+      $("hero").innerHTML='<div class="bignum count">'+cd.d+'<span class="u">d</span> '+cd.h+'<span class="u">h</span></div><div class="herosub">until quit day, '+dateStr+'</div>';
+      $("progWrap").style.display="none";
     } else {
-      var t = fmtDur(elapsed);
-      $("hero").innerHTML =
-        '<div class="bignum free">' + t.d + '</div>' +
-        '<div class="herosub">' + (t.d === 1 ? "day" : "days") + ' free &middot; ' + t.h + 'h ' + t.m + 'm</div>';
-      $("progWrap").style.display = "block";
-      updateProgress(elapsedH);
+      var t=fmtDur(elapsed);
+      $("hero").innerHTML='<div class="bignum free">'+t.d+'</div><div class="herosub">'+(t.d===1?"day":"days")+' free &middot; '+t.h+'h '+t.m+'m</div>';
+      $("progWrap").style.display="block"; updateProgress(elapsedH);
     }
-
-    var dayIndex = Math.max(0, Math.floor(elapsedH / 24));
-    var quote = preQuit ? PREP_NOTES[dayIndex % PREP_NOTES.length] : ENCOURAGEMENTS[dayIndex % ENCOURAGEMENTS.length];
-    $("quote").textContent = quote;
-
-    var earned = 0;
-    for (var i = 0; i < MILESTONES.length; i++) { if (!preQuit && elapsedH >= MILESTONES[i].h) earned++; }
-    if (earned !== lastEarned) { lastEarned = earned; renderCards(preQuit, elapsedH); }
+    var dayIndex=Math.max(0,Math.floor(elapsedH/24));
+    $("quote").textContent = preQuit ? PREP_NOTES[dayIndex%PREP_NOTES.length] : ENCOURAGEMENTS[dayIndex%ENCOURAGEMENTS.length];
+    var earned=0; for(var i=0;i<MILESTONES.length;i++){ if(!preQuit && elapsedH>=MILESTONES[i].h) earned++; }
+    if(earned!==lastEarned){ lastEarned=earned; renderCards(preQuit, elapsedH); }
   }
-
-  function updateProgress(elapsedH) {
-    var earnedCount = 0, next = null, prevH = 0;
-    for (var i = 0; i < MILESTONES.length; i++) {
-      if (elapsedH >= MILESTONES[i].h) { earnedCount++; prevH = MILESTONES[i].h; }
-      else if (!next) { next = MILESTONES[i]; }
-    }
-    var pct = next ? Math.max(0, Math.min(100, ((elapsedH - prevH) / (next.h - prevH)) * 100)) : 100;
-    $("progFill").style.width = pct + "%";
-    $("progCount").textContent = earnedCount + " of " + MILESTONES.length + " milestones";
+  function updateProgress(elapsedH){
+    var earnedCount=0,next=null,prevH=0;
+    for(var i=0;i<MILESTONES.length;i++){ if(elapsedH>=MILESTONES[i].h){earnedCount++;prevH=MILESTONES[i].h;} else if(!next){next=MILESTONES[i];} }
+    var pct=next?Math.max(0,Math.min(100,((elapsedH-prevH)/(next.h-prevH))*100)):100;
+    $("progFill").style.width=pct+"%";
+    $("progCount").textContent=earnedCount+" of "+MILESTONES.length+" milestones";
     var label;
-    if (!next) label = "Every milestone earned";
-    else {
-      var remH = next.h - elapsedH;
-      if (remH >= 24) { var dd = Math.ceil(remH / 24); label = next.title + " in " + dd + " day" + (dd > 1 ? "s" : ""); }
-      else if (remH >= 1) label = next.title + " in " + Math.ceil(remH) + "h";
-      else label = next.title + " in " + Math.ceil(remH * 60) + "m";
+    if(!next) label="Every milestone earned";
+    else { var r=next.h-elapsedH;
+      if(r>=24){var dd=Math.ceil(r/24);label=next.title+" in "+dd+" day"+(dd>1?"s":"");}
+      else if(r>=1) label=next.title+" in "+Math.ceil(r)+"h";
+      else label=next.title+" in "+Math.ceil(r*60)+"m";
     }
-    $("progNext").textContent = label;
+    $("progNext").textContent=label;
+  }
+  function renderCards(preQuit, elapsedH){
+    var html="";
+    for(var i=0;i<MILESTONES.length;i++){
+      var ms=MILESTONES[i], earned=!preQuit && elapsedH>=ms.h;
+      html+='<div class="card'+(earned?" earned":"")+'"><div class="badge">'+svg(earned?ms.icon:"Lock",22)+'</div><div style="flex:1"><div class="t">'+esc(ms.title)+(earned?'<span style="color:var(--grow);display:inline-flex">'+svg("Check",15)+'</span>':'')+'</div><p class="b">'+esc(ms.body)+'</p></div></div>';
+    }
+    $("cards").innerHTML=html;
+  }
+  function renderRecent(){
+    if(!moods.length){ $("recentWrap").innerHTML=""; return; }
+    var recent=moods.slice().reverse().slice(0,7), html='<h3 class="sub">Recent</h3><div class="rlist">';
+    for(var i=0;i<recent.length;i++){
+      var r=recent[i], dateStr=new Date(r.ts).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+      html+='<div class="ritem"><div class="emo">'+MOOD_EMOJI[r.mood]+'</div><div class="txt"><div class="l1">'+esc(MOOD_LABELS[r.mood])+' &middot; craving '+esc(CRAVE_LABELS[r.crave].toLowerCase())+'</div>'+(r.note?'<div class="l2">'+esc(r.note)+'</div>':'')+'</div><div class="date">'+dateStr+'</div></div>';
+    }
+    $("recentWrap").innerHTML=html+'</div>';
+  }
+  function renderAll(){ lastEarned=-1; refreshTime(); renderRecent(); }
+
+  // sliders
+  function paintRange(el,max,accentVar){ var p=(el.value/max)*100; el.style.background="linear-gradient(90deg, var("+accentVar+") "+p+"%, var(--locked) "+p+"%)"; }
+  var moodR,craveR;
+  function syncMood(){ $("moodLegend").textContent=MOOD_LABELS[+moodR.value]; paintRange(moodR,4,"--grow"); }
+  function syncCrave(){ $("craveLegend").textContent=CRAVE_LABELS[+craveR.value]; paintRange(craveR,5,"--dawn"); }
+
+  function startTicking(){ if(ticking) return; ticking=true; setInterval(refreshTime,1000); }
+
+  // ===== auth =====
+  function redirectURL(){ return window.location.origin + window.location.pathname; }
+  function validEmail(e){ return /\S+@\S+\.\S+/.test(e); }
+
+  async function sendMagicLink(){
+    var email=$("email").value.trim(), msg=$("authMsg");
+    if(!validEmail(email)){ msg.className="authmsg err"; msg.textContent="Please enter a valid email address."; return; }
+    $("sendLink").disabled=true; msg.className="authmsg"; msg.textContent="Sending\u2026";
+    try{
+      var res=await sb.auth.signInWithOtp({ email: email, options:{ emailRedirectTo: redirectURL() } });
+      if(res.error) throw res.error;
+      msg.className="authmsg ok";
+      msg.textContent="Check your email for a sign-in link. Open it on any device and you'll land right here, signed in.";
+    }catch(e){
+      msg.className="authmsg err";
+      msg.textContent=(e && e.message) ? e.message : "Couldn't send the link. Try again in a moment.";
+    }finally{ $("sendLink").disabled=false; }
   }
 
-  function renderCards(preQuit, elapsedH) {
-    var html = "";
-    for (var i = 0; i < MILESTONES.length; i++) {
-      var ms = MILESTONES[i];
-      var earned = !preQuit && elapsedH >= ms.h;
-      html +=
-        '<div class="card' + (earned ? " earned" : "") + '">' +
-          '<div class="badge">' + svg(earned ? ms.icon : "Lock", 22) + '</div>' +
-          '<div style="flex:1">' +
-            '<div class="t">' + esc(ms.title) + (earned ? '<span style="color:var(--grow);display:inline-flex">' + svg("Check", 15) + '</span>' : '') + '</div>' +
-            '<p class="b">' + esc(ms.body) + '</p>' +
-          '</div>' +
-        '</div>';
+  function handleSession(session){
+    var sUid = session && session.user ? session.user.id : null;
+    if(sUid){
+      $("acctEmail").textContent = session.user.email || "";
+      show("app"); startTicking();
+      if(sUid!==currentUid){ currentUid=sUid; uid=sUid; setSync("saving"); pull(); }
+    } else {
+      currentUid=null; uid=null; show("auth");
     }
-    $("cards").innerHTML = html;
   }
 
-  function renderRecent() {
-    if (!moods.length) { $("recentWrap").innerHTML = ""; return; }
-    var recent = moods.slice().reverse().slice(0, 7);
-    var html = '<h3 class="sub">Recent</h3><div class="rlist">';
-    for (var i = 0; i < recent.length; i++) {
-      var r = recent[i];
-      var dateStr = new Date(r.ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-      html +=
-        '<div class="ritem">' +
-          '<div class="emo">' + MOOD_EMOJI[r.mood] + '</div>' +
-          '<div class="txt">' +
-            '<div class="l1">' + esc(MOOD_LABELS[r.mood]) + ' &middot; craving ' + esc(CRAVE_LABELS[r.crave].toLowerCase()) + '</div>' +
-            (r.note ? '<div class="l2">' + esc(r.note) + '</div>' : '') +
-          '</div>' +
-          '<div class="date">' + dateStr + '</div>' +
-        '</div>';
-    }
-    html += '</div>';
-    $("recentWrap").innerHTML = html;
-  }
-
-  // ---- sliders ----
-  function paintRange(el, max, accentVar) {
-    var pct = (el.value / max) * 100;
-    el.style.background = "linear-gradient(90deg, var(" + accentVar + ") " + pct + "%, var(--locked) " + pct + "%)";
-  }
-  var moodR = $("moodRange"), craveR = $("craveRange");
-  function syncMood() { $("moodLegend").textContent = MOOD_LABELS[+moodR.value]; paintRange(moodR, 4, "--grow"); }
-  function syncCrave() { $("craveLegend").textContent = CRAVE_LABELS[+craveR.value]; paintRange(craveR, 5, "--dawn"); }
-  moodR.addEventListener("input", syncMood);
-  craveR.addEventListener("input", syncCrave);
+  // ===== init UI =====
+  $("openSettings").innerHTML=svg("Settings",18);
+  $("closeSettings").innerHTML=svg("X",20);
+  $("confirm").querySelector(".ic").innerHTML=svg("Check",20);
+  moodR=$("moodRange"); craveR=$("craveRange");
+  moodR.addEventListener("input",syncMood); craveR.addEventListener("input",syncCrave);
   syncMood(); syncCrave();
 
-  // ---- toast ----
-  var toastTimer = null;
-  function flash(msg) {
-    var t = $("toast"); t.textContent = msg; t.classList.add("show");
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200);
-  }
-
-  // ---- actions ----
-  $("saveCheckin").addEventListener("click", function () {
-    var note = $("noteInput").value.trim();
-    moods.push({ ts: Date.now(), mood: +moodR.value, crave: +craveR.value, note: note });
-    saveKey("quit:moods", moods);
-    $("noteInput").value = "";
-    renderRecent();
-    flash("Check-in saved");
+  $("saveCheckin").addEventListener("click",function(){
+    var note=$("noteInput").value.trim(), mood=+moodR.value, crave=+craveR.value;
+    moods.push({ ts:Date.now(), mood:mood, crave:crave, note:note });
+    saveCache(); renderRecent();
+    var elapsed=Date.now()-quitMs();
+    $("confirmMsg").textContent=buildEncouragement(mood,crave,elapsed/3.6e6,elapsed<0,moods.length);
+    $("confirm").classList.add("show");
+    push();
   });
 
-  $("openSettings").addEventListener("click", function () { $("dateInput").value = quitISO; $("overlay").classList.add("show"); });
-  $("closeSettings").addEventListener("click", function () { $("overlay").classList.remove("show"); });
-  $("overlay").addEventListener("click", function (e) { if (e.target === $("overlay")) $("overlay").classList.remove("show"); });
-  $("saveDate").addEventListener("click", function () {
-    var v = $("dateInput").value;
-    if (v) { quitISO = v; saveKey("quit:config", { quitISO: quitISO }); lastEarned = -1; }
+  $("openSettings").addEventListener("click",function(){ $("dateInput").value=quitISO; $("overlay").classList.add("show"); });
+  $("closeSettings").addEventListener("click",function(){ $("overlay").classList.remove("show"); });
+  $("overlay").addEventListener("click",function(e){ if(e.target===$("overlay")) $("overlay").classList.remove("show"); });
+  $("saveDate").addEventListener("click",function(){
+    var v=$("dateInput").value;
+    if(v){ quitISO=v; saveCache(); renderAll(); push(); }
     $("overlay").classList.remove("show");
-    refreshTime();
-    flash("Quit date updated");
   });
 
-  // ---- go ----
-  renderRecent();
-  refreshTime();
-  setInterval(refreshTime, 1000);
+  $("sendLink").addEventListener("click",sendMagicLink);
+  $("email").addEventListener("keydown",function(e){ if(e.key==="Enter") sendMagicLink(); });
+  $("signout").addEventListener("click",async function(){ try{ await sb.auth.signOut(); }catch(e){} });
+
+  // ===== boot =====
+  if(!window.supabase || !window.supabase.createClient){
+    show("boot"); $("bootView").querySelector(".spinner").style.display="none";
+    $("bootMsg").textContent="Couldn't load the sync service. Check your connection and refresh the page.";
+    return;
+  }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  sb.auth.onAuthStateChange(function(_e, session){ handleSession(session); });
+  sb.auth.getSession().then(function(res){ handleSession(res.data.session); }).catch(function(){ show("auth"); });
 })();
 </script>
 </body>
